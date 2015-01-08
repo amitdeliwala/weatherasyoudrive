@@ -55,10 +55,10 @@ function stepParse(stepArray){
   }
   for(x=0;x<durationArray.length;x++){
     timeSum += durationArray[x];
-    if (timeSum % 3600 == 1){
+    if (timeSum % 3600 > 0){
       getWeather(x,timeSum);
       displayAlert("Over an hour has elapsed");
-
+      timeSum -= 3600;
     }
     else if ((timeSum % 3600 != 1) && (x == durationArray.length - 1)){
       displayAlert("Less than an hour");
@@ -77,7 +77,7 @@ function getWeather(locArray,time){
 
   displayAlert(latitude + "," + longitude + " " + time);
   //create url for forecast
-  url=url + latitude + "," + longitude + "," + time;
+  url=url + latitude + "," + longitude + "," + time + "?callback=?";
   displayAlert(url);
   //go to JSONQuery function for query code
   var weatherdata = JSON.parse(JSONQuery(url));
@@ -85,12 +85,39 @@ function getWeather(locArray,time){
   displayWeather(weatherdata);
 }
 function JSONQuery(JSONurl){
-  var Httpreq = new XMLHttpRequest(); // a new request
-  Httpreq.open("GET",JSONurl,false);
-  Httpreq.send(null);
-  return Httpreq.responseText;   
+  var data;
+  $.getJSON(url, function(data) {
+    //console.log(data);
+    displayWeather(data);  
+  });
 }
 function displayWeather(weatherdata){
-  
+  var text = weatherdata.currently.temperature;
+  displayAlert(text);
+  //create a circle with the temperature inside on location
+  var latnlng = new google.maps.LatLng(weatherdata.latitude, weatherdata.longitude);
+  //chooseIcon(weatherdata);
+  var image = 'images/sunny test.png';
+  var contentString = (text + " degrees Farenheit");
+  //create the infowindow
+  var infowindow = new google.maps.InfoWindow({
+    content: contentString
+  });
+  //create the marker which will have icon for what type of weather 
+  var tempMarker = new google.maps.Marker({
+    text: text,
+    position: latnlng,
+    map: map,
+    icon: image
+  });
+  //listener for if marker gets clicked
+  google.maps.event.addListener(tempMarker, 'click', function() {
+    infowindow.open(map,tempMarker);
+  });
+  //open by default
+  infowindow.open(map,tempMarker);
+}
+function chooseIcon(weatherdata){
+  //create array with icon data and choose based on weather data.
 }
 google.maps.event.addDomListener(window, 'load', initialize);
